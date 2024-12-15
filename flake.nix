@@ -20,8 +20,10 @@
         devShells.default = pkgs.mkShell {
           packages = [
             pkgs.cargo
+            pkgs.clippy
             pkgs.gcc
             pkgs.rustc
+            pkgs.rustfmt
           ];
         };
       }
