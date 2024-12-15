@@ -26,6 +26,30 @@
             pkgs.rustfmt
           ];
         };
+
+        packages = {
+          default = self.packages.${system}.foobar;
+          foobar = pkgs.rustPlatform.buildRustPackage {
+            pname = "foobar";
+            version = "git";
+            src =
+              let
+                fs = pkgs.lib.fileset;
+              in
+              fs.toSource {
+                root = ./.;
+                fileset = fs.intersection (fs.gitTracked ./.) (
+                  fs.unions [
+                    ./src
+                    ./Cargo.toml
+                    ./Cargo.lock
+                    ./README.md
+                  ]
+                );
+              };
+            cargoLock.lockFile = ./Cargo.lock;
+          };
+        };
       }
     );
 }

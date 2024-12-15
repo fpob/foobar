@@ -1,12 +1,9 @@
-name: FooBar
+name: Checks
 
 on:
   push:
     branches:
       - '**'
-
-env:
-  CARGO_TERM_COLOR: always
 
 jobs:
   checks:
@@ -18,6 +15,6 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v30
 
-      - run: nix develop --command cargo test
+      - run: nix build -L
       - run: nix develop --command cargo clippy
       - run: nix develop --command cargo fmt --check
