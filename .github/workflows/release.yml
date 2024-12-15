@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '**'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create GitHub release
+        run: gh release create --repo ${{ github.repository }} ${{ github.ref_name }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Update tag "stable"
+        uses: rickstaa/action-create-tag@v1
+        with:
+          tag: stable
+          force_push_tag: true
+
+  build:
+    needs: release
+
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install cross
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
+
+      - name: Build
+        run: cross build --release --locked --target ${{ matrix.target }}
+
+      - name: Upload to release
+        run: |
+          mv target/${{ matrix.target }}/release/foobar foobar-${{ matrix.target }}
+          gh release upload --repo ${{ github.repository }} ${{ github.ref_name }} \
+            foobar-${{ matrix.target }}
+        env:
+          GH_TOKEN: ${{ github.token }}
